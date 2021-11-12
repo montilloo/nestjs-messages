@@ -96,3 +96,52 @@ Content-Type: application/json           --------Headers
 弄清楚这个未发现异常的东西是什么，这是一种在Nest内部被定义。如果在请求周期内抛出，Nest将自动捕获他们，并将其转换为非常漂亮的响应，以发送回给用户。
 
 除了未找到异常之外，还在内部定义了几个其他异常。这些不同异常中的每一个都有点遵循HTTP标准设置的格式。
+
+### Understanding Inversion of Control
+
+理解依赖注入对您来说非常重要，但也有不利的一面。依赖注入有点复杂，除了复杂之外，理解它为什么存在可能是非常具有挑战性的。
+
+我们将开始讨论，为什么存在依赖项注入。
+
+![]("src/assets/images/1.png")
+
+我们现在有了控制器服务和存储库，这些不同的类之间存在非常明显的依赖关系或层次结构，因此，服务依赖于存储库才能正常工作，如果该存储库不存在，我们的服务将无法正常工作，同样控制器依赖于服务，如果服务不存在，控制器将无法工作。在这三个不同的类之间，有非常明显的依赖关系。更重要的是现在我们的控制器和服务正在创建对其属于自己的。因此，当创建消息传递服务的实例时，该类都会自动独立创建自己的依赖关系。控制器也是如此，每当我们创建控制器的实例时，它都在创建自己的依赖项
+
+控制反转，这是软件工程中的一个说法，如果您遵循这个原则，可能会更容易构建可重用代码或者编写可重用代码。这个原则是说，如果你想要有可重用的代码，你编写的类应该不自己创建他们自己依赖项的实例。
+
+bad: MessagesService creates its own copy of MessagesRepository
+
+```
+  messagesRepo: MessagesRepository;
+
+  constructor() {
+    this.messagesRepo = new MessagesRepository();
+  }
+```
+better: MessagesService receivers ite dependency
+
+```
+  messagesRepo: MessagesRepository;
+
+  constructor(repo: MessagesRepository) {
+    this.messagesRepo = repo;
+  }
+```
+
+best: MessagesService receives its dependency, and it does't specifically require 'MessagesRepository'
+
+```
+  interface Repository {
+    findOne(id: string);
+    findAll();
+    create(content: string);
+  }
+
+  export class MessagesService {
+    messagesRepo: Repository;
+    constructor(repo: Repository) {
+      this.messagesRepo = repo;
+    }
+  }
+```
+在这里我们仍然有我们的消息服务，我们仍然期待被给予我们的依赖，但这一次我们不是特别想要获得消息存储库的副本，而是，相反，定义了一个简单的称为Repository的接口。我们说过，无论何时创建消息服务的副本或实例，都必须提供满足存储库接口的对象，所以这是最好的原因，因为我们并不依赖于消息库。只要您通过我们的代码，他就可以工作的非常好，任何满足此接口的对象都可以是消息库，它可以是具有完全不同实现的完全不同类型的存储库。
