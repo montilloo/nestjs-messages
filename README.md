@@ -73,31 +73,31 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 Nest is [MIT licensed](LICENSE).
 
 
-### HTTP 请求是如何工作的
+## HTTP 请求是如何工作的
 
 POST /messages/5?validate=true HTTP/1.1  --------Start line
 HOST: localhost:3000                     --------Headers
 Content-Type: application/json           --------Headers
 {"content": "hi there"}                  --------Body
 
-### Implementing a Service
+## Implementing a Service
 
 我们的控制器将使用服务而不是存储库来访问数据。
 
 服务正在创建自己的依赖项，messages 存储库是此服务的依赖项，换句话说，除非服务具有存储库，否则它不能正常工作。所以，我们在这两个类之间建立了依赖关系。并且该服务正在自行创建依赖关系，这是我们在Nest中不做的事情。我们没有让任何类在构造函数中创建自己的依赖项，相反，我们将在nest中使用一种非常特殊的系统，称为依赖项注入来设置。我们还没有这样做的原因是我想真正深入研究依赖项注入。帮助你真正深入理解这一切是怎么回事。`this.messagesRepo = new MessagesRepository();``这是一行非常临时的代码，稍后就会删除。我们将删除它，并依赖与依赖项注入来设置不同类之间的所有不同依赖关系。
 
-### Manual Testing of the controller
+## Manual Testing of the controller
 我们已经完成了消息传递服务和存储库，所以现在我们需要创建一个实例并将其交给控制器，然后控制器将接收对我们的三个不同路由处理程序的传入请求，具体取决于在调用那个处理程序时，控制器将通过使用从服务中获得的数据来响应请求。
 
 在controller中获得服务的实例 ，并使用它来响应请求。
 
-### Reporting Errors with Exceptions
+## Reporting Errors with Exceptions
 
 弄清楚这个未发现异常的东西是什么，这是一种在Nest内部被定义。如果在请求周期内抛出，Nest将自动捕获他们，并将其转换为非常漂亮的响应，以发送回给用户。
 
 除了未找到异常之外，还在内部定义了几个其他异常。这些不同异常中的每一个都有点遵循HTTP标准设置的格式。
 
-### Understanding Inversion of Control
+## Understanding Inversion of Control
 
 理解依赖注入对您来说非常重要，但也有不利的一面。依赖注入有点复杂，除了复杂之外，理解它为什么存在可能是非常具有挑战性的。
 
@@ -145,3 +145,7 @@ best: MessagesService receives its dependency, and it does't specifically requir
   }
 ```
 在这里我们仍然有我们的消息服务，我们仍然期待被给予我们的依赖，但这一次我们不是特别想要获得消息存储库的副本，而是，相反，定义了一个简单的称为Repository的接口。我们说过，无论何时创建消息服务的副本或实例，都必须提供满足存储库接口的对象，所以这是最好的原因，因为我们并不依赖于消息库。只要您通过我们的代码，他就可以工作的非常好，任何满足此接口的对象都可以是消息库，它可以是具有完全不同实现的完全不同类型的存储库。
+
+## Few More Notes on DI
+
+容器将保持它已创建的所有实例的列表，因此，在依赖项注入领域理解这一点是非常重要的。每当容器创建依赖项时，每当创建消息服务实例或者存储库实例或其他任何东西，他将在内部存储该实例。如果再次请求相同的依赖项，可以随着时间的推移重用该实例。因此，如果您应用程序中有两个不同的类都请求消息服务，将只创建一个实例，并且该实例将在另外两个class上。
